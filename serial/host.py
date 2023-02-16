@@ -73,6 +73,7 @@ class SerialPortConfig:
             print("Port can't be opened:", e)
     
     def _receive_data_thread(self):
+        # this is an adapter to start a new thread.
         threading.Thread(target=self.receive_data).start()
     
     def receive_data(self):
@@ -100,7 +101,7 @@ class SerialPortConfig:
         self.receive_window.destroy()
         
     def cancel(self):
-
+        # exit routine
         self.root.quit()
         
         
