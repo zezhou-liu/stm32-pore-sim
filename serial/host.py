@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+import threading
 import serial
 import time
 class SerialPortConfig:
@@ -45,9 +46,12 @@ class SerialPortConfig:
 
         connect_button = tk.Button(self.root, text="Connect", command=self.connect)
         connect_button.grid(row=5, column=0, padx=5, pady=5, sticky="W")
+        
+        receive_button = tk.Button(self.root, text="Receive", command=self._receive_data_thread)
+        receive_button.grid(row=5, column=1, padx=5, pady=5, sticky="W")
 
         cancel_button = tk.Button(self.root, text="Cancel", command=self.cancel)
-        cancel_button.grid(row=5, column=1, padx=5, pady=5, sticky="E")
+        cancel_button.grid(row=5, column=2, padx=5, pady=5, sticky="E")
 
     def connect(self):
         port = self.port_var.get()
@@ -68,12 +72,36 @@ class SerialPortConfig:
         except Exception as e:
             print("Port can't be opened:", e)
     
+    def _receive_data_thread(self):
+        threading.Thread(target=self.receive_data).start()
+    
+    def receive_data(self):
+        # create a new window for displaying the received data
+        self.receive_window = tk.Toplevel(self.root)
+        self.receive_window.title("Received Data")
+        self.receive_window.geometry("400x300")
+
+        # create a text box widget in the new window to display the received data
+        self.receive_text = tk.Text(self.receive_window)
+        self.receive_text.pack(fill="both", expand=True)
+        
+        self.receive_window.protocol("WM_DELETE_WINDOW", self.close_port)
+        # start the serial connection
+        self.connect()
+
+        # start receiving and displaying the serial data
+        while True:
+            data = self.ser.readline().decode('utf-8')
+            self.receive_text.insert("end", data)
+            self.receive_text.see("end")
+    
+    def close_port(self):
+        self.ser.close()
+        self.receive_window.destroy()
+        
     def cancel(self):
-        try:
-            self.ser.close()
-        except Exception as e:
-            print(e)
-            self.root.quit()
+
+        self.root.quit()
         
         
     
